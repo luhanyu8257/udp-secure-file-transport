@@ -57,6 +57,7 @@ unsigned char *generateMD5(char *data){
     for (int i = 0; i < md5_digest_len; i++){
 		sprintf((char*)&hexMD5[i * 2], "%02X", md5_digest[i]);         //查看MD5
 	}
+    free(md5_digest);
     return hexMD5;
 }
 
