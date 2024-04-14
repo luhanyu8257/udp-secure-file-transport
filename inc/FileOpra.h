@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <openssl/md5.h>
+#include <openssl/evp.h>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <stdbool.h>
@@ -16,24 +16,48 @@
 #include "Window.h"
 #include<pthread.h>
 unsigned char *generateMD5(char *data){
-    unsigned char* md5=(unsigned char*)malloc(sizeof(char)*(MD5_DIGEST_LENGTH+1));
-    memset(md5, 0, sizeof(char)*(MD5_DIGEST_LENGTH+1));
+    // unsigned char* md5=(unsigned char*)malloc(sizeof(char)*(MD5_DIGEST_LENGTH+1));
+    // memset(md5, 0, sizeof(char)*(MD5_DIGEST_LENGTH+1));
 
-    MD5_CTX m;
-    int ret=MD5_Init(&m);
-    if(ret!=1){
-        perror("MD5 GENERATE ERROR\n");
-        return NULL;
-    }
-    MD5_Update(&m, data, strlen(data));
-    MD5_Final(md5,&m);
-    unsigned char* hexMD5=(unsigned char *)malloc(sizeof(char)*(MD5_DIGEST_LENGTH*2+1));
-    memset(hexMD5, 0, sizeof(char)*(MD5_DIGEST_LENGTH*2+1));
+    // MD5_CTX m;
+    // int ret=MD5_Init(&m);
+    // if(ret!=1){
+    //     perror("MD5 GENERATE ERROR\n");
+    //     return NULL;
+    // }
+    // MD5_Update(&m, data, strlen(data));
+    // MD5_Final(md5,&m);
+    // unsigned char* hexMD5=(unsigned char *)malloc(sizeof(char)*(MD5_DIGEST_LENGTH*2+1));
+    // memset(hexMD5, 0, sizeof(char)*(MD5_DIGEST_LENGTH*2+1));
 
-    for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
-	{
-		sprintf((char*)&hexMD5[i * 2], "%02X", md5[i]);         //查看MD5
+    // for (int i = 0; i < MD5_DIGEST_LENGTH; i++)
+	// {
+	// 	sprintf((char*)&hexMD5[i * 2], "%02X", md5[i]);         //查看MD5
+	// }
+    // return hexMD5;
+    EVP_MD_CTX *mdctx;
+    unsigned char *md5_digest;
+    unsigned int md5_digest_len = EVP_MD_size(EVP_md5());
+    // MD5_Init
+    mdctx = EVP_MD_CTX_new();
+    EVP_DigestInit_ex(mdctx, EVP_md5(), NULL);
+
+    // MD5_Update
+    EVP_DigestUpdate(mdctx, data, strlen(data));
+
+    // MD5_Final
+    md5_digest = (unsigned char *)malloc(md5_digest_len);
+    memset(md5_digest, 0, md5_digest_len);
+
+    EVP_DigestFinal_ex(mdctx, md5_digest, &md5_digest_len);
+    EVP_MD_CTX_free(mdctx);
+    
+    unsigned char* hexMD5=(unsigned char *)malloc(sizeof(char)*(md5_digest_len*2+1));
+    memset(hexMD5, 0, sizeof(char)*(md5_digest_len*2+1));
+    for (int i = 0; i < md5_digest_len; i++){
+		sprintf((char*)&hexMD5[i * 2], "%02X", md5_digest[i]);         //查看MD5
 	}
+    free(md5_digest);
     return hexMD5;
 }
 
@@ -107,6 +131,7 @@ int makeDataPack(PACK pack,char* buf,unsigned long seq,unsigned int len){
     unsigned char* hexMD5;
     hexMD5=generateMD5(pack->data);
     memcpy(pack->md5,hexMD5,33);
+    free(hexMD5);
     return len;
 }
 
@@ -119,10 +144,13 @@ int makeErrorPack(PACK pack,const char* errorCode){
 
 bool md5Check(PACK pack){
     //校验数据包的md5
+    bool ret;
     unsigned char* temp=generateMD5(pack->data);
     if (!strcmp((char*)temp, (char*)pack->md5)) {
-        return true;
+        ret= true;
     }else {
-        return false;
+        ret= false;
     }
+    free(temp);
+    return ret;
 }
