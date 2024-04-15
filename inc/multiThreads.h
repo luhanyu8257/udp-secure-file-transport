@@ -11,9 +11,41 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/time.h>
 pthread_mutex_t severMutex;
 pthread_mutex_t clientMutex;
-
+int myRecvFrom(int socket,PACK pack,int len,struct sockaddr* SocketMsg,socklen_t* MsgLen,unsigned long* delaytime,int num){
+    struct timeval begin,end;
+    gettimeofday(&begin, NULL);
+    int dataLen=-1;
+    int n=0;
+    //如果轮询时间超过3倍的rtt，那么启动超时重发
+    while (dataLen==-1 && n < 3) {
+        printf("hhhhhhhh1\n");
+        usleep(*delaytime);
+        printf("hhhhhhhh2\n");
+        dataLen=recvfrom(socket,pack, len,0,SocketMsg,MsgLen);
+        if (dataLen==-1) {
+            printf("1\n");
+            //未收到返回包，继续等待
+            n++;   
+        }else if(pack->seq<num){
+            printf("2\n");
+            //收到超时重发的回复包，计时器清零，继续等待
+            num=0;
+            gettimeofday(&begin, NULL);
+            continue;
+        }else{
+            printf("3\n");
+            //对话结束，或收到当前等待的回复包，跳出循环
+            break;
+        }
+    }
+    gettimeofday(&end, NULL);
+    *delaytime=(unsigned long)((end.tv_sec-begin.tv_sec)*1000*1000+end.tv_usec-begin.tv_usec)*0.97;    
+    printf("delaytime:%lu\n",*delaytime);
+    return dataLen;
+}
 void* serverTransThread(void* param){
     //发送线程
     struct severTransParameter* para=(struct severTransParameter*)param;
@@ -22,6 +54,7 @@ void* serverTransThread(void* param){
     struct Pack recvPacket;
     unsigned long seq;
     int len;
+    unsigned long udelaytime =DEFAULT_BLOKE_TIME;
     while (1) {
         memset(buf, 0, MAX_PACK_DATA_LEN);
         pthread_mutex_lock(&severMutex);
@@ -40,11 +73,12 @@ void* serverTransThread(void* param){
         sendPacket.port=para->sock->port;   
         do {
             sendto(para->sock->socket,&sendPacket,sizeof(struct Pack),0,(struct sockaddr*)&para->clientSocketMsg,para->clientMsgLen);
-            recvfrom(para->sock->socket,&recvPacket,sizeof(struct Pack),0,(struct sockaddr*)&para->clientSocketMsg,&para->clientMsgLen);
+            myRecvFrom(para->sock->socket,&recvPacket,sizeof(struct Pack),(struct sockaddr*)&para->clientSocketMsg,&para->clientMsgLen, &udelaytime, seq);
+            //recvfrom(para->sock->socket,&recvPacket,sizeof(struct Pack),0,(struct sockaddr*)&para->clientSocketMsg,&para->clientMsgLen);
             printf("port:%dseq:%lureqseq:%ld\n",para->sock->port,seq,recvPacket.seq);
-            if (recvPacket.seq!=seq) {
-                usleep(10);
-            }
+            // if (recvPacket.seq!=seq) {
+            //     usleep(10);
+            // }
         }while (recvPacket.seq!=seq);
     }
     return 0;

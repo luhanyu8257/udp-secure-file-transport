@@ -15,4 +15,7 @@
 
 #define UHUNG_TIME 20 //默认线程挂起20毫秒
 
+#define DEFAULT_BLOKE_TIME 1000*30
+
+#define DEFAULT_ASK_TIME 1000*100
 #endif

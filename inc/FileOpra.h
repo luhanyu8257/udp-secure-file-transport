@@ -107,21 +107,6 @@ int makeColumPack(PACK pack,char* path){
     return 0;
 }
 
-int makeMsgPack(PACK pack,char* path){
-    //获取文件大小
-    struct stat fileState;
-    stat(path, &fileState);
-    unsigned long fileSize=fileState.st_size;
-    //构造文件大小数据包
-    char* dataLen=(char*)malloc(20);
-    memset(dataLen, 0, sizeof(char)*20);
-    sprintf(dataLen, "%ld", fileSize);
-    memset(pack, 0, sizeof(struct Pack));
-    strcat(pack->data, dataLen);
-    free(dataLen);
-    return 0;
-}
-
 int makeDataPack(PACK pack,char* buf,unsigned long seq,unsigned int len){
     //构建数据包
     pack->type='4';
@@ -139,6 +124,22 @@ int makeErrorPack(PACK pack,const char* errorCode){
     //构造错误信息数据包
     pack->type='5';
     strcat(pack->data, errorCode);
+    return 0;
+}
+
+int makeMsgPack(PACK pack,char* path){
+    pack->type='6';
+    //获取文件大小
+    struct stat fileState;
+    stat(path, &fileState);
+    unsigned long fileSize=fileState.st_size;
+    //构造文件大小数据包
+    char* dataLen=(char*)malloc(20);
+    memset(dataLen, 0, sizeof(char)*20);
+    sprintf(dataLen, "%ld", fileSize);
+    memset(pack, 0, sizeof(struct Pack));
+    strcat(pack->data, dataLen);
+    free(dataLen);
     return 0;
 }
 

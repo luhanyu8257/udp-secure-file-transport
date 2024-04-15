@@ -12,7 +12,7 @@
 #include "inc/params.h"
 #include "inc/Window.h"
 int main(int argc,char* argv[]){
-    if(argc>3){
+    if(argc>2){
         char *server_addr=argv[1];
         server_port=atoi(argv[2]);
     }
