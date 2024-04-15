@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include<arpa/inet.h> 
 #include<string.h>
+#include "inc/FileOpra.h"
 #include "inc/def.h"
 #include"inc/multiThreads.h"
 #include "inc/params.h"
@@ -97,8 +98,7 @@ int main(int argc,char* argv[]){
         }
         
         //创建命令包
-        pClient->type='2';
-        strcat(pClient->data, command);
+        makeCmdPack(pClient, command);
 
         //发送命令
         sendto(clientSocket,pClient,sizeof(struct Pack),0,(struct sockaddr*)&severSocketMsg,severMsgLen);

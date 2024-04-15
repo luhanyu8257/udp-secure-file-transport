@@ -76,9 +76,6 @@ void* serverTransThread(void* param){
             myRecvFrom(para->sock->socket,&recvPacket,sizeof(struct Pack),(struct sockaddr*)&para->clientSocketMsg,&para->clientMsgLen, &udelaytime, seq);
             //recvfrom(para->sock->socket,&recvPacket,sizeof(struct Pack),0,(struct sockaddr*)&para->clientSocketMsg,&para->clientMsgLen);
             printf("port:%dseq:%lureqseq:%ld\n",para->sock->port,seq,recvPacket.seq);
-            // if (recvPacket.seq!=seq) {
-            //     usleep(10);
-            // }
         }while (recvPacket.seq!=seq);
     }
     return 0;
