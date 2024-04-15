@@ -8,7 +8,7 @@ typedef struct Pack{
     unsigned long seq;  //8BYTE包序号
     unsigned int dataLen;//4BYTE包中数据长度
     unsigned char md5[33];  //32BYTE
-    char data[MAXPACKDATALEN]; //1024BYTE
+    char data[MAX_PACK_DATA_LEN]; //1024BYTE
     int port;  //发送线程端的端口号
 }*PACK;
 

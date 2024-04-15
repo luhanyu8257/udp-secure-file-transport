@@ -10,7 +10,7 @@
 #include <arpa/inet.h>
 #include"pack.h"
 #include "def.h"
-int getDir(char* path,char*pathAddrs[MAXPATHNUM]){
+int getDir(char* path,char*pathAddrs[MAX_PATH_NUM]){
 
     DIR* dir=opendir(path);
     if (dir==NULL) {

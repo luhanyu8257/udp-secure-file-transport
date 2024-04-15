@@ -12,6 +12,11 @@
 #include "inc/params.h"
 #include "inc/Window.h"
 int main(int argc,char* argv[]){
+    if(argc>3){
+        char *server_addr=argv[1];
+        server_port=atoi(argv[2]);
+    }
+
     //初始化锁
     pthread_mutex_init(&clientMutex, NULL);
     //创建客户端socket
@@ -34,8 +39,8 @@ int main(int argc,char* argv[]){
     struct sockaddr_in severSocketMsg;
     memset(&severSocketMsg, 0, sizeof(severSocketMsg));
     severSocketMsg.sin_family=AF_INET;
-    severSocketMsg.sin_port=htons(8000);
-    severSocketMsg.sin_addr.s_addr=inet_addr("127.0.0.1");
+    severSocketMsg.sin_port=htons(server_port);
+    severSocketMsg.sin_addr.s_addr=inet_addr(server_addr);
     unsigned int severMsgLen=sizeof(severSocketMsg);
 
     //客户端缓冲区
@@ -43,8 +48,8 @@ int main(int argc,char* argv[]){
 
     
     //接收目录
-    char* path=(char*)malloc(sizeof(char)*MAXPATHNUM);
-    memset(path, 0 ,sizeof(char)*MAXPATHNUM);
+    char* path=(char*)malloc(sizeof(char)*MAX_PATH_NUM);
+    memset(path, 0 ,sizeof(char)*MAX_PATH_NUM);
     strcat(path, "//home//wowotou//桌面//vscode//test");
 
 
@@ -54,7 +59,7 @@ int main(int argc,char* argv[]){
     char* dest_path;
 
     //用于拷贝客户端命令
-    char* temp=malloc(MAXINSTRUCTLEN);
+    char* temp=malloc(MAX_INSTRUCT_LEN);
     
     //输入命令
     while (1) {
@@ -63,11 +68,11 @@ int main(int argc,char* argv[]){
         memset(pClient,0,sizeof(struct Pack));
 
         //输入指令，并清除输入末尾的\n
-        char* command=(char*)malloc(MAXINSTRUCTLEN);
-        memset(command, 0, MAXINSTRUCTLEN);
+        char* command=(char*)malloc(MAX_INSTRUCT_LEN);
+        memset(command, 0, MAX_INSTRUCT_LEN);
 
         while (1) {
-            fgets(command,MAXINSTRUCTLEN,stdin);
+            fgets(command,MAX_INSTRUCT_LEN,stdin);
             command[strlen(command)-1]='\0';
 
             //拷贝客户端命令
@@ -121,8 +126,8 @@ int main(int argc,char* argv[]){
         }else{
             printf("客户端请求get file somewhere\n");
             //创建临时地址
-            char* tempPath=(char*)malloc(MAXPATHLEN);
-            memset(tempPath, 0, MAXPATHLEN);
+            char* tempPath=(char*)malloc(MAX_PATH_LEN);
+            memset(tempPath, 0, MAX_PATH_LEN);
             strcpy(tempPath, path);
             strcat(tempPath, "//");
             strcat(tempPath, dest_path);
@@ -137,7 +142,7 @@ int main(int argc,char* argv[]){
 
             //接收文件包数
             unsigned long fileSize=atol(pClient->data);
-            unsigned long blokeNum=fileSize/MAXPACKDATALEN+1;
+            unsigned long blokeNum=fileSize/MAX_PACK_DATA_LEN+1;
             
             //接收队列
             WINDOW window=windowInit();

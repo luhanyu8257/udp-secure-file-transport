@@ -63,8 +63,8 @@ unsigned char *generateMD5(char *data){
 
 bool pathExist(char* path,char* next){
     //地址有效性检验
-    char* filePath=(char*)malloc(sizeof(char)*MAXPATHLEN);
-    memset(filePath, 0, sizeof(char)*MAXPATHLEN);
+    char* filePath=(char*)malloc(sizeof(char)*MAX_PATH_LEN);
+    memset(filePath, 0, sizeof(char)*MAX_PATH_LEN);
     strcpy(filePath, path);
     strcat(filePath, "//");
     strcat(filePath,next);  
@@ -98,7 +98,7 @@ int makeCmdPack(PACK pack,char* cmd){
 int makeColumPack(PACK pack,char* path){
     pack->type='3';
     //创建目录数组
-    char*pathAddrs[MAXPATHNUM];
+    char*pathAddrs[MAX_PATH_NUM];
     memset(pathAddrs, 0,sizeof(pathAddrs));
     //构造目录数据包
     int pathNum=getDir(path,pathAddrs);        
