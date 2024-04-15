@@ -15,7 +15,6 @@
 #include<sys/select.h>
 #include"inc/multiThreads.h"
 #include"inc/params.h"
-
 int main(int argc,char* argv[]){
     pthread_mutex_init(&severMutex, NULL);
     //创建服务器socket
@@ -24,8 +23,9 @@ int main(int argc,char* argv[]){
     memset(&severSocketMsg, 0, sizeof(severSocketMsg));
     severSocketMsg.sin_family=AF_INET;
     int basePort=8000;
+    server_port=basePort;
     severSocketMsg.sin_port=htons(basePort);
-    severSocketMsg.sin_addr.s_addr=inet_addr("127.0.0.1");
+    severSocketMsg.sin_addr.s_addr=inet_addr(server_addr);
     int severMsgLen=sizeof(severSocketMsg);
     //绑定ip和端口
     if (bind(severSocket,(struct sockaddr *)&severSocketMsg,severMsgLen)==-1)
@@ -42,8 +42,8 @@ int main(int argc,char* argv[]){
     PACK pSever=createPack();
 
     //根目录
-    char* path=(char*)malloc(sizeof(char)*MAXPATHLEN);
-    memset(path, 0 ,sizeof(char)*MAXPATHLEN);
+    char* path=(char*)malloc(sizeof(char)*MAX_PATH_LEN);
+    memset(path, 0 ,sizeof(char)*MAX_PATH_LEN);
     strcat(path, "//home//wowotou//桌面//vscode//test");
 
     //收消息
@@ -103,8 +103,8 @@ int main(int argc,char* argv[]){
                 //文件传输
 
                 //获得临时文件地址
-                char* tempPath=(char*)malloc(MAXPATHLEN);
-                memset(tempPath, 0, MAXPATHLEN);
+                char* tempPath=(char*)malloc(MAX_PATH_LEN);
+                memset(tempPath, 0, MAX_PATH_LEN);
                 strcpy(tempPath, path);
                 strcat(tempPath, "//");
                 strcat(tempPath, seq_2);
@@ -115,11 +115,11 @@ int main(int argc,char* argv[]){
                 //构造发送线程参数
                 ssize_t fd=open(tempPath,O_RDONLY);
                 
-                SOCK socks[MAXTHREADNUM];
-                struct severTransParameter param[MAXTHREADNUM];
+                SOCK socks[MAX_THREAD_NUM];
+                struct severTransParameter param[MAX_THREAD_NUM];
                 srand(time(NULL));
-                unsigned int portBegin=1025+rand()%(65535-1025-MAXTHREADNUM);
-                for (int i=0; i<MAXTHREADNUM; i++) {
+                unsigned int portBegin=1025+rand()%(65535-1025-MAX_THREAD_NUM);
+                for (int i=0; i<MAX_THREAD_NUM; i++) {
                     printf("port :%d\n",portBegin);
                     socks[i]=makeSocket(portBegin%65535);
                     if (socks[i]==NULL) {
@@ -137,12 +137,12 @@ int main(int argc,char* argv[]){
 
                 //发送线程创建，初始化锁
                 
-                pthread_t tids[MAXTHREADNUM];
-                for (int i=0; i<MAXTHREADNUM; i++) {
+                pthread_t tids[MAX_THREAD_NUM];
+                for (int i=0; i<MAX_THREAD_NUM; i++) {
                     pthread_create(&tids[i], NULL, serverTransThread, (void*)&param[i]);
                 }
                 
-                for (int i=0; i<MAXTHREADNUM; i++) {
+                for (int i=0; i<MAX_THREAD_NUM; i++) {
                     pthread_join(tids[i], NULL);
                     close(socks[i]->socket);
                 }         

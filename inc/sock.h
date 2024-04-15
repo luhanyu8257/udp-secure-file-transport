@@ -9,7 +9,8 @@
 #include<string.h>
 #include <unistd.h>
 #include<pthread.h>
-
+static char *server_addr="127.0.0.1";
+static int server_port=8000;
 typedef struct Sock{
     int socket;
     unsigned int port;

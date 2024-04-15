@@ -4,6 +4,7 @@
 #include"params.h"
 #include "FileOpra.h"
 #include "Window.h"
+#include "sock.h"
 #include <netinet/in.h>
 #include <pthread.h>
 #include<stdio.h>
@@ -13,22 +14,21 @@
 pthread_mutex_t severMutex;
 pthread_mutex_t clientMutex;
 
-
 void* serverTransThread(void* param){
     //发送线程
     struct severTransParameter* para=(struct severTransParameter*)param;
-    char buf[MAXPACKDATALEN];
+    char buf[MAX_PACK_DATA_LEN];
     struct Pack sendPacket;
     struct Pack recvPacket;
     unsigned long seq;
     int len;
     while (1) {
-        memset(buf, 0, MAXPACKDATALEN);
+        memset(buf, 0, MAX_PACK_DATA_LEN);
         pthread_mutex_lock(&severMutex);
-        len=read(para->fd,buf,MAXPACKDATALEN);
+        len=read(para->fd,buf,MAX_PACK_DATA_LEN);
         unsigned long end=lseek(para->fd, 0, SEEK_CUR);
-        seq=end/MAXPACKDATALEN;
-        if (end%MAXPACKDATALEN!=0) {
+        seq=end/MAX_PACK_DATA_LEN;
+        if (end%MAX_PACK_DATA_LEN!=0) {
             seq++;
         }
         pthread_mutex_unlock(&severMutex);
@@ -66,12 +66,12 @@ void* clientRecvThread(void * param){
         
         pthread_mutex_lock(&clientMutex);
 
-        if (para->window->windowLen==MAXWINDOWSIZE) {
+        if (para->window->windowLen==MAX_WINDOW_SIZE) {
             makeAckPack(requestPack, num);
             sendto(para->clientSocket, requestPack, sizeof(struct Pack), 0, (struct sockaddr*)&para->severSocketMsg, para->severMsgLen);
             //队列满，线程挂起，等待队列清空
             pthread_mutex_unlock(&clientMutex);
-            usleep(UHUNGTIME); 
+            usleep(UHUNG_TIME); 
 
         }else if (!md5Check(dataPack)) {
             pthread_mutex_unlock(&clientMutex);
@@ -85,14 +85,16 @@ void* clientRecvThread(void * param){
             num++;
 
             //队列满，线程挂起，等待队列清空
-            if (para->window->windowLen==MAXWINDOWSIZE) {
-                usleep(UHUNGTIME); 
+            if (para->window->windowLen==MAX_WINDOW_SIZE) {
+                usleep(UHUNG_TIME); 
                 continue;
             }
         }
     }
     free(requestPack);
     free(dataPack);    
+    //undefined behavior
+    return NULL;
 }
 
 void* clientWriteThread(void* param){
@@ -100,7 +102,7 @@ void* clientWriteThread(void* param){
     struct sockaddr_in severSocketMsg;
     memset(&severSocketMsg, 0, sizeof(severSocketMsg));
     severSocketMsg.sin_family=AF_INET;
-    severSocketMsg.sin_addr.s_addr=inet_addr("127.0.0.1");
+    severSocketMsg.sin_addr.s_addr=inet_addr(server_addr);
     unsigned int severMsgLen=sizeof(severSocketMsg);
     
     struct clientWriteParameter* para =(struct clientWriteParameter*)param;
@@ -131,13 +133,15 @@ void* clientWriteThread(void* param){
                 num++;
             }else{
                 pthread_mutex_unlock(&clientMutex);
-                usleep(UHUNGTIME);
+                usleep(UHUNG_TIME);
             }
         }else {
             
             pthread_mutex_unlock(&clientMutex);
-            usleep(UHUNGTIME);
+            usleep(UHUNG_TIME);
         }
     }
     close(fd);
+    //undefined behavior
+    return NULL;
 }

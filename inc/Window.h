@@ -36,7 +36,7 @@ WINDOW windowInit(){
 
 bool addToWindow(WINDOW window,struct Pack pack){
 
-    if (window->windowLen==MAXWINDOWSIZE) {
+    if (window->windowLen==MAX_WINDOW_SIZE) {
         return false;
     }
 
@@ -76,6 +76,8 @@ bool addToWindow(WINDOW window,struct Pack pack){
             }
         }
     }
+    //undefined behavior
+    return false;
 }
 
 NODE popFromWindow(WINDOW window){
